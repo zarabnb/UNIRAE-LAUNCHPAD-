@@ -13,7 +13,7 @@ assert "IMigrationAsset(wrappedNative).transfer(beneficiary,wrappedDust)" in mig
 assert "IMigrationPair(pair).skim(address(this))" in migrator
 assert "IMigrationPair(pair).totalSupply()==0" in migrator
 assert "IFactoryMigrationCoordinator(coordinator).curve() == curveAddress" in factory
-assert "IFactoryMigrationCoordinator(coordinator).token() == address(UniraeBondingCurve(curveAddress).token())" in factory
+assert "IFactoryMigrationCoordinator(coordinator).token() == address(UniraeBondingCurve(payable(curveAddress)).token())" in factory
 assert "function acceptFactoryOwnership()" in factory
 assert "function acceptOwnership()" in fee_vault
 assert "BUYBACK_BURN_SINK" in token and "buyback sink exemption is permanent" in token

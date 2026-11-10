@@ -18,7 +18,10 @@ assert "function acceptFactoryOwnership()" in factory
 assert "function acceptOwnership()" in fee_vault
 assert "BUYBACK_BURN_SINK" in token and "buyback sink exemption is permanent" in token
 assert "REQUIRED_BURN_SINK" in buyback and "wrappedNative.code.length > 0" in buyback
-assert "external onlyOwner nonReentrant" in fee_vault[fee_vault.index("function executeBuyback"):fee_vault.index("function transferOwnership")]
+buyback_fn = fee_vault[fee_vault.index("function executeBuyback"):fee_vault.index("function transferOwnership")]
+assert "external nonReentrant" in buyback_fn
+assert 'require(msg.sender == tokenCreator[token], "FEE: not token creator")' in buyback_fn
+assert "mapping(address => address) public tokenCreator;" in fee_vault
 assert "address public pendingOwner" in token and "function acceptOwnership()" in token
 registry = (root / "contracts/modules/AuthorizedEquityRegistry.sol").read_text()
 assert "address public pendingOwner" in registry and "function acceptOwnership()" in registry

@@ -199,9 +199,6 @@ contract UniraeV11Test {
         MockAmmPairMarker unauthorizedPair = new MockAmmPairMarker();
         vm.expectRevert();
         token.registerAmmPair(address(unauthorizedPair));
-        token.registerAmmPair(address(unauthorizedPair));
-        token.registerAmmPair(address(unauthorizedPair));
-        token.registerAmmPair(address(unauthorizedPair));
     }
 
     function testFactoryRejectsCoordinatorBoundToDifferentLaunch() public {

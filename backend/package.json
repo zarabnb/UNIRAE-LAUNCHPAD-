@@ -1,0 +1,45 @@
+{
+  "name": "unirae-indexer-api",
+  "version": "2.22.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:api": "tsx watch src/server.ts",
+    "dev:indexer": "tsx watch src/indexer.ts",
+    "start:api": "node dist/server.js",
+    "start:indexer": "node dist/indexer.js",
+    "build": "tsc -p tsconfig.json",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:dev": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "test": "vitest run",
+    "dev:factory-indexer": "tsx watch src/factory-indexer.ts",
+    "start:factory-indexer": "node dist/factory-indexer.js",
+    "test:watch": "vitest",
+    "check": "npm run db:generate && npm run test && npm run build",
+    "dev:dex-indexer": "tsx watch src/dex-indexer.ts",
+    "start:dex-indexer": "node dist/dex-indexer.js",
+    "register:v3-pool": "tsx src/register-v3-pool.ts",
+    "dev:fee-indexer": "tsx watch src/fee-indexer.ts",
+    "start:fee-indexer": "node dist/fee-indexer.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "zod": "^4.1.12",
+    "viem": "^2.38.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.10.0",
+    "prisma": "^6.19.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

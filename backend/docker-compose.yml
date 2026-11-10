@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: unirae
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_local_only}
+      POSTGRES_DB: unirae
+    ports:
+      - "5432:5432"
+    volumes:
+      - unirae_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unirae -d unirae"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  unirae_pgdata:

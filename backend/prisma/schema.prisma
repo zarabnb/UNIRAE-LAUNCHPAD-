@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chain {
+  id             Int      @id
+  slug           String   @unique
+  name           String
+  namespace      String   @default("evm")
+  enabled        Boolean  @default(true)
+  tokens         Token[]
+  trades         Trade[]
+  transfers      Transfer[]
+  dexPairs       DexPair[]
+  dexPools       DexPool[]
+  feeEvents      FeeEvent[]
+  cursors        IndexerCursor[]
+  events         IndexedEvent[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Token {
+  id             String   @id @default(cuid())
+  chainId        Int
+  address        String
+  curveAddress   String?
+  creator        String
+  name           String
+  symbol         String
+  decimals       Int      @default(18)
+  totalSupply    String?
+  txHash         String?
+  createdBlock   BigInt?
+  indexFromBlock BigInt?
+  verified       Boolean  @default(false)
+  chain          Chain    @relation(fields: [chainId], references: [id])
+  transfers      Transfer[]
+  trades         Trade[]
+  dexPairs       DexPair[]
+  dexPools       DexPool[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([chainId, address])
+  @@index([creator])
+  @@index([chainId, createdAt])
+  @@index([chainId, curveAddress])
+}
+
+model Transfer {
+  id             String   @id @default(cuid())
+  chainId        Int
+  tokenId        String
+  txHash         String
+  logIndex       Int
+  blockNumber    BigInt
+  blockHash      String
+  fromAddress    String
+  toAddress      String
+  amount         String
+  timestamp      DateTime?
+  chain          Chain    @relation(fields: [chainId], references: [id])
+  token          Token    @relation(fields: [tokenId], references: [id])
+  @@unique([chainId, txHash, logIndex])
+  @@index([chainId, fromAddress, blockNumber])
+  @@index([chainId, toAddress, blockNumber])
+}
+
+model Trade {
+  id             String   @id @default(cuid())
+  chainId        Int
+  tokenId        String
+  txHash         String
+  logIndex       Int
+  blockNumber    BigInt
+  blockHash      String
+  trader         String
+  side           String
+  amountIn       String
+  amountOut      String
+  feeAmount      String @default("0")
+  timestamp      DateTime?
+  chain          Chain    @relation(fields: [chainId], references: [id])
+  token          Token    @relation(fields: [tokenId], references: [id])
+  @@unique([chainId, txHash, logIndex])
+  @@index([chainId, trader, blockNumber])
+  @@index([tokenId, blockNumber])
+}
+
+model IndexerCursor {
+  id             String   @id @default(cuid())
+  chainId        Int
+  contractAddress String
+  lastBlock      BigInt
+  lastBlockHash  String
+  chain          Chain    @relation(fields: [chainId], references: [id])
+  updatedAt      DateTime @updatedAt
+  @@unique([chainId, contractAddress])
+}
+
+model IndexedEvent {
+  id             String   @id @default(cuid())
+  chainId        Int
+  txHash         String
+  logIndex       Int
+  blockNumber    BigInt
+  blockHash      String
+  address        String
+  eventName      String
+  payload        Json
+  chain          Chain    @relation(fields: [chainId], references: [id])
+  @@unique([chainId, txHash, logIndex])
+  @@index([chainId, blockNumber])
+}
+
+model AdminAuditLog {
+  id             String   @id @default(cuid())
+  actorId        String
+  action         String
+  resource       String
+  resourceId     String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  @@index([actorId, createdAt])
+}
+
+model WalletNonce {
+  id        String   @id @default(cuid())
+  address   String
+  nonce     String   @unique
+  domain    String
+  chainId   Int
+  messageHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  @@index([address, expiresAt])
+}
+
+
+model DexPair {
+  id              String   @id @default(cuid())
+  chainId         Int
+  tokenId         String
+  pairAddress     String
+  quoteToken      String
+  migrationTxHash String
+  migrationBlock  BigInt
+  migrationLogIndex Int
+  blockHash       String
+  dex             String   @default("uniswap-v2-compatible")
+  active          Boolean  @default(true)
+  chain           Chain    @relation(fields: [chainId], references: [id])
+  token           Token    @relation(fields: [tokenId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@unique([chainId, pairAddress])
+  @@unique([chainId, migrationTxHash, migrationLogIndex])
+  @@index([chainId, tokenId, active])
+}
+
+
+model DexPool {
+  id          String   @id @default(cuid())
+  chainId     Int
+  tokenId     String
+  poolAddress String
+  quoteToken  String
+  startBlock  BigInt
+  feeTier     Int
+  dex         String   @default("uniswap-v3")
+  active      Boolean  @default(true)
+  chain       Chain    @relation(fields: [chainId], references: [id])
+  token       Token    @relation(fields: [tokenId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([chainId, poolAddress])
+  @@index([chainId, tokenId, active])
+}
+
+
+model FeeEvent {
+  id             String   @id @default(cuid())
+  chainId        Int
+  vaultAddress   String
+  tokenAddress   String
+  actor          String?
+  eventName      String
+  amount         String   @default("0")
+  creatorAmount  String   @default("0")
+  buybackAmount  String   @default("0")
+  platformAmount String   @default("0")
+  txHash         String
+  logIndex       Int
+  blockNumber    BigInt
+  blockHash      String
+  timestamp      DateTime?
+  payload        Json
+  chain          Chain    @relation(fields: [chainId], references: [id])
+  createdAt      DateTime @default(now())
+  @@unique([chainId, txHash, logIndex])
+  @@index([chainId, tokenAddress, blockNumber])
+  @@index([chainId, vaultAddress, blockNumber])
+}

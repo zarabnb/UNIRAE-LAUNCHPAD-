@@ -1,0 +1,16 @@
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+out/
+cache/
+broadcast/
+coverage/
+.artifacts/
+.env
+.env.*
+!.env.production.example
+*.pem
+*.key
+*.keystore
+.DS_Store

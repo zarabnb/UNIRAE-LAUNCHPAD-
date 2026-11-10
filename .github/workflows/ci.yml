@@ -1,0 +1,43 @@
+name: UNIRAE CI
+on: [push, pull_request]
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: python3 tests/v2.17-static-check.py
+      - run: python3 tests/v2.18-static-check.py
+      - run: python3 tests/v2.19-static-check.py
+      - run: python3 tests/v2.20-static-check.py
+      - run: python3 tests/v2.22-static-check.py
+      - run: python3 tests/v2.26-ui-static-check.py
+      - run: python3 tests/v2.31-buyback-static-check.py
+      - run: python3 tests/v2.32-liquidity-router-static-check.py
+      - run: python3 tests/v2.33-empty-pair-griefing-static-check.py
+      - run: python3 tests/v2.34-migration-integrity-static-check.py
+      - run: node scripts/check-inline-js.mjs
+      - run: bash tests/production-preflight.test.sh
+
+  backend:
+    needs: [static]
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: npx prisma validate
+      - run: npx prisma generate
+      - run: npm test
+      - run: npm run build
+
+  evm:
+    needs: [static]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: forge test -vvv

@@ -1,12 +1,18 @@
+cat > .github/workflows/ci.yml <<'EOF'
 name: UNIRAE CI
+
 on: [push, pull_request]
+
 jobs:
   static:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
       - run: python3 tests/v2.17-static-check.py
       - run: python3 tests/v2.18-static-check.py
       - run: python3 tests/v2.19-static-check.py
@@ -23,11 +29,18 @@ jobs:
   backend:
     needs: [static]
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: backend } }
+    env:
+      DATABASE_URL: postgresql://unirae:unirae@localhost:5432/unirae?schema=public
+    defaults:
+      run:
+        working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
       - run: npm install --no-audit --no-fund
       - run: npx prisma validate
       - run: npx prisma generate
@@ -38,6 +51,7 @@ jobs:
     needs: [static]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: foundry-rs/foundry-toolchain@v1
       - run: forge test -vvv
+EOF

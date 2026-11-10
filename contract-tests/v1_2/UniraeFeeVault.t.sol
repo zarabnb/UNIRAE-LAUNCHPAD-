@@ -26,7 +26,7 @@ contract UniraeFeeVaultTest {
         vm.deal(address(this), 20 ether);
     }
     function testFeeDistributionAndCreatorClaim() public {
-        vault.depositTradeFee{value: 2 ether}(TOKEN, CREATOR, 4_000, 2_000);
+        vault.depositTradeFee{value: 2 ether}(TOKEN, CREATOR, CREATOR, 4_000, 2_000);
         require(vault.creatorCredit(TOKEN, CREATOR) == 0.8 ether, "creator share");
         require(vault.buybackCredit(TOKEN) == 0.4 ether, "buyback share");
         require(vault.platformCredit(TOKEN) == 0.8 ether, "platform remainder");
@@ -36,21 +36,39 @@ contract UniraeFeeVaultTest {
         require(vault.creatorCredit(TOKEN, CREATOR) == 0, "credit cleared");
     }
     function testBuybackThresholdAndExecution() public {
-        vault.depositTradeFee{value: 5 ether}(TOKEN, CREATOR, 0, 2_000);
+        vault.depositTradeFee{value: 5 ether}(TOKEN, CREATOR, CREATOR, 0, 2_000);
         vm.expectRevert(); vm.prank(address(0xBAD));
         vault.executeBuyback(TOKEN, 1, block.timestamp + 60);
         require(vault.buybackCredit(TOKEN) == 1 ether, "unauthorized caller cannot consume reserve");
+        vm.prank(CREATOR);
         vault.executeBuyback(TOKEN, 1, block.timestamp + 60);
         require(executor.received() == 1 ether, "buyback sent");
         require(executor.lastToken() == TOKEN, "token selected");
         require(vault.buybackCredit(TOKEN) == 0, "reserve cleared");
     }
+    function testCreatorsCannotSpendAnotherTokensBuyback() public {
+        address token2 = address(0x2222);
+        address creator2 = address(0x3333);
+        vault.depositTradeFee{value: 5 ether}(TOKEN, CREATOR, CREATOR, 0, 2_000);
+        vault.depositTradeFee{value: 5 ether}(token2, creator2, creator2, 0, 2_000);
+
+        vm.expectRevert();
+        vm.prank(CREATOR);
+        vault.executeBuyback(token2, 1, block.timestamp + 60);
+
+        vm.prank(creator2);
+        vault.executeBuyback(token2, 1, block.timestamp + 60);
+
+        require(vault.buybackCredit(TOKEN) == 1 ether, "other token reserve changed");
+        require(vault.buybackCredit(token2) == 0, "own token reserve not cleared");
+        require(executor.lastToken() == token2, "wrong token bought");
+    }
     function testUnauthorizedCurveCannotDeposit() public {
         vm.expectRevert(); vm.prank(address(0xBAD));
-        vault.depositTradeFee{value: 1 ether}(TOKEN, CREATOR, 5_000, 0);
+        vault.depositTradeFee{value: 1 ether}(TOKEN, CREATOR, CREATOR, 5_000, 0);
     }
     function testAllocationsCannotExceedOneHundredPercent() public {
-        vm.expectRevert(); vault.depositTradeFee{value: 1 ether}(TOKEN, CREATOR, 8_000, 3_000);
+        vm.expectRevert(); vault.depositTradeFee{value: 1 ether}(TOKEN, CREATOR, CREATOR, 8_000, 3_000);
     }
     function testOwnershipHandoffRequiresAcceptance() public {
         address nextOwner=address(0xA11CE);

@@ -16,7 +16,7 @@ contract MockFeeVaultForFactory {
     constructor(address platform_) { platformWallet=platform_; }
     function setFactory(address factory,bool yes) external { authorizedFactory[factory]=yes; }
     function authorizeCurve(address curve) external { require(authorizedFactory[msg.sender], "factory"); authorizedCurve[curve]=true; }
-    function depositTradeFee(address token,address creator,uint16 creatorBps,uint16 buybackBps) external payable {
+    function depositTradeFee(address token,address creator,address tokenCreator,uint16 creatorBps,uint16 buybackBps) external payable {
         require(authorizedCurve[msg.sender], "curve"); lastToken=token;lastCreator=creator;lastCreatorBps=creatorBps;lastBuybackBps=buybackBps;totalReceived+=msg.value;
     }
 }

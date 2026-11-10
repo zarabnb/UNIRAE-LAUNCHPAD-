@@ -22,6 +22,7 @@ contract UniraeFeeVault {
     mapping(address => mapping(address => uint256)) public creatorCredit;
     mapping(address => uint256) public platformCredit;
     mapping(address => uint256) public buybackCredit;
+    mapping(address => address) public tokenCreator;
     uint256 private entered;
 
     event CurveAuthorization(address indexed curve, bool authorized);
@@ -71,13 +72,15 @@ contract UniraeFeeVault {
         emit CurveAuthorization(curve, true);
     }
 
-    function depositTradeFee(address token, address creator, uint16 creatorBps, uint16 buybackBps) external payable {
+    function depositTradeFee(address token, address creator, address tokenCreator_, uint16 creatorBps, uint16 buybackBps) external payable {
         require(authorizedCurve[msg.sender], "FEE: unauthorized curve");
         require(token != address(0) && creator != address(0) && msg.value > 0, "FEE: invalid deposit");
         require(uint256(creatorBps) + buybackBps <= BPS, "FEE: invalid allocation");
         uint256 creatorAmount = msg.value * creatorBps / BPS;
         uint256 buybackAmount = msg.value * buybackBps / BPS;
         uint256 platformAmount = msg.value - creatorAmount - buybackAmount;
+        require(tokenCreator[token] == address(0) || tokenCreator[token] == tokenCreator_, "FEE: creator mismatch");
+        tokenCreator[token] = tokenCreator_;
         creatorCredit[token][creator] += creatorAmount;
         buybackCredit[token] += buybackAmount;
         platformCredit[token] += platformAmount;
@@ -103,7 +106,8 @@ contract UniraeFeeVault {
         emit PlatformClaimed(token, amount);
     }
 
-    function executeBuyback(address token, uint256 minTokensOut, uint256 deadline) external onlyOwner nonReentrant {
+    function executeBuyback(address token, uint256 minTokensOut, uint256 deadline) external nonReentrant {
+        require(msg.sender == tokenCreator[token], "FEE: not token creator");
         uint256 amount = buybackCredit[token];
         require(buybackExecutorConfigured, "FEE: executor not configured");
         require(amount >= buybackThreshold, "FEE: below threshold");

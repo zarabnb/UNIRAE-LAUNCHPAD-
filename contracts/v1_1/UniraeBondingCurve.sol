@@ -20,7 +20,7 @@ interface IUniraeMigrationCoordinator {
     function migrate(address token, uint256 tokenAmount) external payable;
 }
 interface IUniraeFeeVault {
-    function depositTradeFee(address token, address creator, uint16 creatorBps, uint16 buybackBps) external payable;
+    function depositTradeFee(address token, address creator, address tokenCreator, uint16 creatorBps, uint16 buybackBps) external payable;
 }
 
 /// @notice Native-asset linear bonding curve with a Chainlink USD graduation check.
@@ -156,7 +156,7 @@ contract UniraeBondingCurve {
             _pay(platformFeeWallet, fee);
         } else {
             IUniraeFeeVault(feeVault).depositTradeFee{value: fee}(
-                address(token), creatorFeeWallet, creatorFeeShareBps, buybackFeeShareBps
+                address(token), creatorFeeWallet, creator, creatorFeeShareBps, buybackFeeShareBps
             );
         }
     }
